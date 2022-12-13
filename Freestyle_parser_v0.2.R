@@ -1,14 +1,14 @@
-#___ for testing
-setwd("/media/lucaz/DATA/Seafile/Laboratorio/myscripts/GitHub/Freestyle_parser")
-raw_data <- "toy_data"
-# raw_data <- "toy_data/Output software @IgG.xlsx"
-annotation_db <- "annotation_db.csv"
-config_file <- "config_file.tsv"
-
-Freestyle_parser(raw_data = "toy_data", 
-                 annotation_db = "annotation_db.csv", 
-                 config_file = "config_file.tsv")
-#___ for testing
+# #___ for testing
+# setwd("/media/lucaz/DATA/Seafile/Laboratorio/myscripts/GitHub/Freestyle_parser")
+# raw_data <- "toy_data"
+# # raw_data <- "toy_data/Output software @IgG.xlsx"
+# annotation_db <- "annotation_db.csv"
+# config_file <- "config_file.tsv"
+# 
+# Freestyle_parser(raw_data = "toy_data", 
+#                  annotation_db = "annotation_db.csv", 
+#                  config_file = "config_file.tsv")
+# #___ for testing
 
 
 Freestyle_parser <- function(raw_data, annotation_db, config_file) {
@@ -277,3 +277,5 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
          width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
   
 }
+
+Freestyle_parser()
