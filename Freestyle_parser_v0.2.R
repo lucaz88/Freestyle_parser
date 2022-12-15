@@ -1,42 +1,52 @@
-# #___ for testing
+#!/usr/bin/env Rscript
+
+
+
+# #___ dummy data for testing
 # setwd("/media/lucaz/DATA/Seafile/Laboratorio/myscripts/GitHub/Freestyle_parser")
 # raw_data <- "toy_data"
 # # raw_data <- "toy_data/Output software @IgG.xlsx"
 # annotation_db <- "annotation_db.csv"
 # config_file <- "config_file.tsv"
-# 
-# Freestyle_parser(raw_data = "toy_data", 
-#                  annotation_db = "annotation_db.csv", 
-#                  config_file = "config_file.tsv")
 # #___ for testing
 
 
+
+#! parse command line argument - python style
+if (! "optparse" %in% rownames(installed.packages())) {
+  cat("Installing missing package optparse\n\n")
+  install.packages("optparse")
+}
+suppressMessages(suppressWarnings(library("optparse")))
+
+option_list = list(
+  make_option(c("-r", "--raw_data"), type="character", default=NULL, 
+              help="path to a folder containing multiple Excel files or to a single Excel file", metavar="character"),
+  make_option(c("-a", "--annotation_db"), type="character", default=NULL, 
+              help="path to a 2-columns *.csv* file containing the list of glycoform names and related glycan masses", metavar="character"),
+  make_option(c("-c", "--config_file"), type="character", default=NULL, 
+              help="path to a 2-columns *.csv* file containing tolerance_value, overlap_label_range, and any analyzed peptide name with related mass", metavar="character")
+)
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+
+
+#! parsing function
 Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
-  #! input specifications
-  # raw_data: path to a folder containing multiple Excel files, or to a specific file;
-  #           filenames of each Excel HAS to include, unambiguously, the peptide name: *@pep_name.xls*
-  # annotation_db: use '_' instead of spaces, use '@' to separate name types e.g. "H5N2@Man5"
-  # config_file: 2-columns tab separated list in which:
-  #              - 1st row - 'tolerance_value' followed by value (in ppm) setting the stringency of peaks' annotation
-  #              - 2nd row - 'overlap_label_range' followed by value (in Dalton) defining range within which only the label of highest intensity peak with be plotted
-  #              - following rows contain the names of target peptides followed by their masses (in Dalton).
-  #                All peptides relevant for the analyzed samples must be included
-  
-  
-  
-  #! libraries
+  ##! libraries
   required_libs <- c("readxl","tidyverse","ggplot2","ggrepel")
   missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
   if (length(missing_libs) > 1) {
-    cat("Installing missing packages: ", paste(missing_libs, collapse = ", "))
+    cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
     sapply(missing_libs, function(i) install.packages(i))
   }
   invisible(suppressMessages(suppressWarnings(lapply(required_libs, library, character.only = TRUE))))
   
   
   
-  #! read-in raw data
+  ##! read-in raw data
   if (file_test("-d", raw_data)) {
     raw_tables <- list.files(raw_data, pattern = ".xlsx$|.xls$", 
                              full.names = T, recursive = T)
@@ -90,8 +100,8 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   
-  #! read-in config file
-  conf_file <- read.table(config_file, h=F, row.names = 1) %>% 
+  ##! read-in config file
+  conf_file <- read.csv(conf_file, h=F, row.names = 1) %>% 
     t() %>% as.data.frame()
   
   if (colnames(conf_file)[1] != "tolerance_value") {
@@ -115,7 +125,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   
-  #! read-in annotation database
+  ##! read-in annotation database
   ann_db <- read.csv(annotation_db, h=T)
   colnames(ann_db) <- c("Glycoform", "Glycan_Mass") # to ensure compliance with downstream code
   
@@ -141,7 +151,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   
-  #! filter table
+  ##! filter table
   raw_table_filt <- raw_table %>%
     filter(!is.na(No.)) %>% # remove peak details
     mutate(across(3:10, as.numeric)) %>%
@@ -149,21 +159,21 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   
-  #! annotate peaks
+  ##! annotate peaks
   peaks_ann <- raw_table_filt %>%
     mutate(target_pept_mass = as.numeric(conf_file[Target.Peptide]),
            measurement_tolerance = Monoisotopic.Mass/1E6*conf_file$tolerance_value # ??? ppm should be calculated on the Monoisotopic.Mass, right? as it accounts for the instrument measurement error
     ) %>%
     rowwise() %>% mutate(Glycoform = {
-      ##! look if peak's mass matches the mass of the target peptide + a glycan
+      ###! look if peak's mass matches the mass of the target peptide + a glycan
       i_ann = ann_db$Glycoform[target_pept_mass + ann_db$Glycan_Mass >= Monoisotopic.Mass - measurement_tolerance &
                                  target_pept_mass + ann_db$Glycan_Mass <= Monoisotopic.Mass + measurement_tolerance]
       
       if (identical(i_ann, character(0))) {
-        ##! look if peak's mass matches the mass of the not-glycosylated target peptide 
+        ###! look if peak's mass matches the mass of the not-glycosylated target peptide 
         if (target_pept_mass >= Monoisotopic.Mass - measurement_tolerance &
             target_pept_mass <= Monoisotopic.Mass + measurement_tolerance) { "not-glycosylated" 
-        } else { NA } ##! peaks without annotation
+        } else { NA } ###! peaks without annotation
         
       } else { i_ann }
       
@@ -175,7 +185,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
            )
   
   
-  #! output tables
+  ##! output tables
   peaks_ann_all <- peaks_ann %>%
     select(Sample, Target.Peptide, Glycoform, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity)
   write.table(peaks_ann_all, "Peaks_annotated_all.tsv",
@@ -189,7 +199,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   
-  #! plot from clean table
+  ##! plot from clean table
   min_mass_diff <- conf_file$overlap_label_range
   z <- 1
   peaks_ann_extra <- peaks_ann %>%
@@ -217,10 +227,10 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
            label_filt_wmass = ifelse(drop_label == T, NA, paste0(label_filt, "\n", sprintf("%0.3f", mass_filt)))) %>%
     ungroup() %>%
     select(-c(too_close_sx, too_close_dx, dummy_cluster)) %>%
-    ##! merge back with full table
+    ###! merge back with full table
     left_join(peaks_ann, .) %>%
     replace_na(list(drop_label = T)) %>%
-    ##! find peak clusters - any peaks!
+    ###! find peak clusters - any peaks!
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>%
     mutate(too_close_sx2 = if_else(abs(Monoisotopic.Mass - lag(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
@@ -278,4 +288,9 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
 }
 
-Freestyle_parser()
+
+
+#! execute
+Freestyle_parser(raw_data = opt$raw_data, 
+                 annotation_db = opt$annotation_db, 
+                 config_file = opt$config_file)
