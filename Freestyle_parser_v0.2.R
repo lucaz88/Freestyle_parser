@@ -19,7 +19,7 @@ if (! "optparse" %in% rownames(installed.packages())) {
 }
 suppressMessages(suppressWarnings(library("optparse")))
 
-option_list = list(
+option_list <- list(
   make_option(c("-r", "--raw_data"), type="character", default=NULL, 
               help="path to a folder containing multiple Excel files or to a single Excel file", metavar="character"),
   make_option(c("-a", "--annotation_db"), type="character", default=NULL, 
@@ -27,8 +27,8 @@ option_list = list(
   make_option(c("-c", "--config_file"), type="character", default=NULL, 
               help="path to a 2-columns *.csv* file containing tolerance_value, overlap_label_range, and any analyzed peptide name with related mass", metavar="character")
 )
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
+opt_parser <- OptionParser(option_list=option_list)
+opt <- parse_args(opt_parser)
 
 
 
@@ -101,7 +101,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   
   ##! read-in config file
-  conf_file <- read.csv(conf_file, h=F, row.names = 1) %>% 
+  conf_file <- read.csv(config_file, h=F, row.names = 1) %>% 
     t() %>% as.data.frame()
   
   if (colnames(conf_file)[1] != "tolerance_value") {
@@ -262,18 +262,19 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
     coord_cartesian(clip = "off") + 
     # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
     facet_grid(Sample~., scales = "free") +
+    labs(y = "Intensity (realtive to highest peak)") +
     theme_minimal() + theme(text = element_text(size = 15))
   ggsave("Peaks_annotated_clean.pdf", p1, dpi = 300, 
          width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
   
   p2 <- ggplot(peaks_ann_extra, aes(Monoisotopic.Mass, Rel.Abundance_highest)) +
     geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), linewidth = 1, lineend = "butt") +
-    geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
+    geom_label_repel(aes(label = mass_filt2), size = 1.3, force = 5,
                      direction = "y", nudge_y = .1,
                      force_pull = 0, # do not pull toward data points
                      min.segment.length = 0, segment.color = "red", 
                      segment.linetype = 2, segment.size = 0.3) +
-    geom_label_repel(aes(label = mass_filt2), size = 1.3, force = 5,
+    geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
                      direction = "y", nudge_y = .1,
                      force_pull = 0, # do not pull toward data points
                      min.segment.length = 0, segment.color = "red", 
@@ -282,8 +283,9 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
     # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
     facet_grid(Sample~., scales = "free") +
     xlim(500, 6500) + #??? restrict window???
+    labs(y = "Intensity (realtive to highest peak)") +
     theme_minimal() + theme(text = element_text(size = 15))
-  ggsave("Peaks_annotated_all.pdf", p1, dpi = 300, 
+  ggsave("Peaks_annotated_all.pdf", p2, dpi = 300, 
          width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
   
 }

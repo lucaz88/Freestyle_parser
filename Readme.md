@@ -26,28 +26,38 @@
 
 ## Set-up the environment:
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
-* fetch the tool repository.
-    * For Windows system:
+* fetch the tool repository
+    * in **Windows**:
+    - Almost at the top of this GitHub page, click *<> Code*
+    - Download ZIP
+    - Save and extract the file where you prefer (e.g. C:\Users\Luca\Tools)
 
-        ???
-
-    * For Linux system
+    * in **Linux**:
 
     open a terminal and type:
 
         sudo apt update
         sudo apt install git
-        cd ~ # or to whatever folder in which you want to save the tool
+        cd /home/user/tools # or to whatever folder in which you want to save the tool
         git clone https://github.com/lucaz88/Freestyle_parser.git
 
 ## How to run:
 
-For Windows system:
+For **Windows** system:
 
-    ???
+* Press the Windows Start button on the screen or keyboard
+* Type in "Command Prompt"
+* Left click on Command Prompt
+* Move into the repository folder (in which toy files are provided to test the tool)
+`cd C:\Users\Luca\Tools\Freestyle_parser-main`
+* Type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Freestyle_parser_v0.2.R -r toy_data -a annotation_db.csv -c config_file.csv`
+\# update the paths to where you actually installed R and downloaded the repo
 
-For Linux system:
+For **Linux** system:
 
 open a terminal and type:
 
-    Rscript Freestyle_parser_v0.2.R -r toy_data -a annotation_db.csv -c config_file.csv 
+    cd /home/user/tools/Freestyle_parser
+    Rscript Freestyle_parser_v0.2.R -r toy_data -a annotation_db.csv -c config_file.csv
+
+**To run you own sample simply `cd` into the project folder with your data and provide the related values the strings for `-r`, `-a` and/or `-c` arguments.**
