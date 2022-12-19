@@ -1,7 +1,7 @@
 # R function to parse Freestyle Excel outputs
 
 ## Required inputs:
-* ***raw_data***: path to a folder containing multiple Excel files (e.g. Project_01/Freestyle_outputs), or path pointing to a single Excel file (e.g. Project_01/Freestyle_outputs/Outputfile@IgM_site4.xlsx). Note that the target peptide name has to be appended **unambiguously** to the filename of each Excel file (e.g. *@peptide_X.xls*)
+* ***raw_data***: path to a folder containing multiple Excel files (e.g. Project_01/Freestyle_outputs), or path pointing to a single Excel file (e.g. Project_01/Freestyle_outputs/Outputfile[]()@IgM_site4.xlsx). Note that the target peptide name has to be appended **unambiguously** to the filename of each Excel file (e.g. *@peptide_X.xls*)
 *  ***annotation_db***: path to a 2-columns *.csv* file containing the list of glycoform names and related glycan masses. Note that the first row in the file contain the column names. For the glycoform names, use '_' instead of spaces, and '@' to separate name types, e.g. "H5N2@Man5"
 
     File example:
@@ -28,9 +28,9 @@
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
 * fetch the tool repository
     * in **Windows**:
-    - Almost at the top of this GitHub page, click *<> Code*
-    - Download ZIP
-    - Save and extract the file where you prefer (e.g. C:\Users\Luca\Tools)
+        - Almost at the top of this GitHub page, click *<> Code*
+        - Download ZIP
+        - Save and extract the file where you prefer (e.g. C:\Users\Luca\Tools)
 
     * in **Linux**:
 
