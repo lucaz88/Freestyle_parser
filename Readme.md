@@ -28,8 +28,8 @@
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
 * fetch the tool repository
     * in **Windows**:
-        - Almost at the top of this GitHub page, click *<> Code*
-        - Download ZIP
+        - Almost at the top of this GitHub page, click *"<> Code"*
+        - Click on *Download ZIP*
         - Save and extract the file where you prefer (e.g. C:\Users\Luca\Tools)
 
     * in **Linux**:
