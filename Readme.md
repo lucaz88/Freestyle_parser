@@ -26,10 +26,22 @@
 
 ## Set-up the environment:
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
+* install the necessary packages.
+    * Start an R session
+    * Type in the following code and follow the prompted instructions:
+    
+        required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
+        missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
+        if (length(missing_libs) > 1) {
+          cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
+          sapply(missing_libs, function(i) install.packages(i))
+        }
+        invisible(lapply(required_libs, library, character.only = TRUE))
+    
 * fetch the tool repository
     * in **Windows**:
         - Almost at the top of this GitHub page, click *"<> Code"*
-        - Click on *Download ZIP*
+        - Click on *"Download ZIP"*
         - Save and extract the file where you prefer (e.g. C:\Users\Luca\Tools)
 
     * in **Linux**:
@@ -48,9 +60,8 @@ For **Windows** system:
 * Press the Windows Start button on the screen or keyboard
 * Type in "Command Prompt"
 * Left click on Command Prompt
-* Move into the repository folder (in which toy files are provided to test the tool)
-`cd C:\Users\Luca\Tools\Freestyle_parser-main`
-* Type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Freestyle_parser_v0.2.R -r toy_data -a annotation_db.csv -c config_file.csv`
+* Move into the repository folder `cd C:\Users\Luca\Tools\Freestyle_parser-main` in which toy files are provided to test the tool
+* Type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Freestyle_parser_v0.3.R -r toy_data -a annotation_db.csv -c config_file.csv`
 \# update the paths to where you actually installed R and downloaded the repo
 
 For **Linux** system:
@@ -58,6 +69,6 @@ For **Linux** system:
 open a terminal and type:
 
     cd /home/user/tools/Freestyle_parser
-    Rscript Freestyle_parser_v0.2.R -r toy_data -a annotation_db.csv -c config_file.csv
+    Rscript Freestyle_parser_v0.3.R -r toy_data -a annotation_db.csv -c config_file.csv
 
 **To run you own sample simply `cd` into the project folder with your data and provide the related values the strings for `-r`, `-a` and/or `-c` arguments.**

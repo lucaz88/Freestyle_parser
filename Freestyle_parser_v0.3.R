@@ -12,13 +12,14 @@
 
 
 
-#! parse command line argument - python style
-if (! "optparse" %in% rownames(installed.packages())) {
-  cat("Installing missing package optparse\n\n")
-  install.packages("optparse")
-}
-suppressMessages(suppressWarnings(library("optparse")))
+#! load libraries
+required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
+invisible(lapply(required_libs, library, character.only = TRUE))
 
+
+
+
+#! parse command line argument - python style
 option_list <- list(
   make_option(c("-r", "--raw_data"), type="character", default=NULL, 
               help="path to a folder containing multiple Excel files or to a single Excel file", metavar="character"),
@@ -34,17 +35,6 @@ opt <- parse_args(opt_parser)
 
 #! parsing function
 Freestyle_parser <- function(raw_data, annotation_db, config_file) {
-  
-  ##! libraries
-  required_libs <- c("readxl","tidyverse","ggplot2","ggrepel")
-  missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
-  if (length(missing_libs) > 1) {
-    cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
-    sapply(missing_libs, function(i) install.packages(i))
-  }
-  invisible(suppressMessages(suppressWarnings(lapply(required_libs, library, character.only = TRUE))))
-  
-  
   
   ##! read-in raw data
   if (file_test("-d", raw_data)) {
