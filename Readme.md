@@ -30,13 +30,13 @@
     * Start an R session
     * Type in the following code and follow the prompted instructions:
 
-        required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
-        missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
-        if (length(missing_libs) > 1) {
-          cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
-          sapply(missing_libs, function(i) install.packages(i))
-        }
-        invisible(lapply(required_libs, library, character.only = TRUE))
+            required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
+            missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
+            if (length(missing_libs) > 1) {
+              cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
+              sapply(missing_libs, function(i) install.packages(i))
+            }
+            invisible(lapply(required_libs, library, character.only = TRUE))
 
 * fetch the tool repository
     * in **Windows**:
