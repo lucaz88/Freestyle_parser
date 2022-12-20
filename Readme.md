@@ -29,7 +29,7 @@
 * install the necessary packages:
     * Start an R session
     * Type in the following code and follow the prompted instructions:
-    
+
         required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
         missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
         if (length(missing_libs) > 1) {
@@ -37,7 +37,7 @@
           sapply(missing_libs, function(i) install.packages(i))
         }
         invisible(lapply(required_libs, library, character.only = TRUE))
-    
+
 * fetch the tool repository
     * in **Windows**:
         - Almost at the top of this GitHub page, click *"<> Code"*
