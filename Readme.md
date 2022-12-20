@@ -6,11 +6,11 @@
 
     File example:
 
-        glycoform,Glycan_Mass
-        N1@single-GlcNAc_(Gn),203.0794
-        H2N2@MU_,730.2644
-        H2N2X@MUX_,862.3067
-        H3N2@MM_,892.3172
+      glycoform,Glycan_Mass
+      N1@single-GlcNAc_(Gn),203.0794
+      H2N2@MU_,730.2644
+      H2N2X@MUX_,862.3067
+      H3N2@MM_,892.3172
 
 *  ***config_file***: path to a 2-columns *.csv* file containing:
     *1st row - 'tolerance_value' followed by the value (in ppm) setting the stringency of peaks' annotation
@@ -19,10 +19,10 @@
     
     File example:
     
-        tolerance_value,5
-        overlap_label_range,50
-        IgG,1189.512
-        IgM_site1,1284.618
+      tolerance_value,5
+      overlap_label_range,50
+      IgG,1189.512
+      IgM_site1,1284.618
 
 ## Set-up the environment:
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
@@ -46,12 +46,12 @@
 
     * in **Linux**:
 
-    open a terminal and type:
+        open a terminal and type:
 
-        sudo apt update
-        sudo apt install git
-        cd /home/user/tools # or to whatever folder in which you want to save the tool
-        git clone https://github.com/lucaz88/Freestyle_parser.git
+          sudo apt update
+          sudo apt install git
+          cd /home/user/tools # or to whatever folder in which you want to save the tool
+          git clone https://github.com/lucaz88/Freestyle_parser.git
 
 ## How to run:
 
