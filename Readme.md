@@ -26,7 +26,7 @@
 
 ## Set-up the environment:
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
-* install the necessary packages.
+* install the necessary packages:
     * Start an R session
     * Type in the following code and follow the prompted instructions:
     
