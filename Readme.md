@@ -26,19 +26,19 @@
 
 ## Set-up the environment:
 * R needs to be installed on the computer. Please follow the instruction provided under *Download and Install R* at https://cran.r-project.org/
-* install the necessary packages:
+* Install the necessary packages:
     * Start an R session
     * Type in the following code and follow the prompted instructions:
 
-            required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
-            missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
-            if (length(missing_libs) > 1) {
-              cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
-              sapply(missing_libs, function(i) install.packages(i))
-            }
-            invisible(lapply(required_libs, library, character.only = TRUE))
+          required_libs <- c("optparse","readxl","tidyverse","ggplot2","ggrepel")
+          missing_libs <- required_libs[!required_libs %in% rownames(installed.packages())]
+          if (length(missing_libs) > 1) {
+            cat("Installing missing packages: ", paste(missing_libs, collapse = ", "), "\n\n")
+            sapply(missing_libs, function(i) install.packages(i))
+          }
+          invisible(lapply(required_libs, library, character.only = TRUE))
 
-* fetch the tool repository
+* Fetch the tool repository
     * in **Windows**:
         - Almost at the top of this GitHub page, click *"<> Code"*
         - Click on *"Download ZIP"*
