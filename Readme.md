@@ -15,12 +15,14 @@
 *  ***config_file***: path to a 2-columns *.csv* file containing:
     *1st row - 'tolerance_value' followed by the value (in ppm) setting the stringency of peaks' annotation
     *2nd row - 'overlap_label_range' followed by the value (in Dalton) defining a range within which only the highest intensity peak will be labbeled in the plot
-    **n* rows containing names of any analyzed peptides followed by their masses (in Dalton).
+    *3nd row - 'mass_range' followed by the values' range (in Dalton:Dalton) of min and max Monoisotopic mass that will be plotted. Use NA to allows for automatic selection of the value/s (e.g. 750:NA)
+    **n* rows containing names of any analyzed peptides followed by their masses (in Dalton)
     
     File example:
     
        tolerance_value,5
        overlap_label_range,50
+       mass_range,NA:NA
        IgG,1189.512
        IgM_site1,1284.618
 

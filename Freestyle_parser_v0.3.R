@@ -7,7 +7,7 @@
 # raw_data <- "toy_data"
 # # raw_data <- "toy_data/Output software @IgG.xlsx"
 # annotation_db <- "annotation_db.csv"
-# config_file <- "config_file.tsv"
+# config_file <- "config_file.csv"
 # #___ for testing
 
 
@@ -92,18 +92,23 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   ##! read-in config file
   conf_file <- read.csv(config_file, h=F, row.names = 1) %>% 
-    t() %>% as.data.frame()
+    t() %>% as.data.frame() %>% mutate_if(!grepl(":", .), as.numeric)
   
   if (colnames(conf_file)[1] != "tolerance_value") {
     stop("Config file is missing the parameter 'tolerance_value'. Add a row like:\n\n",
-    "tolerance_value\t5\n\n\n")
+    "tolerance_value,5\n\n\n")
   }
   
   if (colnames(conf_file)[2] != "overlap_label_range") {
     stop("Config file is missing the parameter 'overlap_label_range'. Add a row like:\n\n",
-         "overlap_label_range\t50\n\n\n")
+         "overlap_label_range,50\n\n\n")
   }
 
+  if (colnames(conf_file)[3] != "mass_range") {
+    stop("Config file is missing the parameter 'mass_range'. Add a row like:\n\n",
+         "mass_range,1000:NA\n\n\n")
+  }
+  
   missing_peptide <- unique(raw_table$Target.Peptide[!raw_table$Target.Peptide %in% names(conf_file)])
   if (length(missing_peptide) > 0) {
     stop("In the config file, the following peptide masses are missing:\n\n", 
@@ -171,7 +176,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>% 
     mutate(Rel.Abundance_ann = if_else(!is.na(Glycoform), Sum.Intensity/sum(Sum.Intensity[!is.na(Glycoform)])*100, NA_real_),
-           Rel.Abundance_highest = Sum.Intensity/max(Sum.Intensity)
+           Rel.Abundance_highest = Sum.Intensity/max(Sum.Intensity)*100
            )
   
   
@@ -245,7 +250,7 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
     ggplot(aes(Monoisotopic.Mass, Rel.Abundance_highest)) +
     geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), linewidth = 1, lineend = "butt") +
     geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
-                     direction = "y", nudge_y = .1,
+                     direction = "y", nudge_y = .1, na.rm=T,
                      force_pull = 0, # do not pull toward data points
                      min.segment.length = 0, segment.color = "red", 
                      segment.linetype = 2, segment.size = 0.3) +
@@ -254,29 +259,31 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
     facet_grid(Sample~., scales = "free") +
     labs(y = "Intensity (realtive to highest peak)") +
     theme_minimal() + theme(text = element_text(size = 15))
-  ggsave("Peaks_annotated_clean.pdf", p1, dpi = 300, 
+  ggsave("Peaks_annotated_clean.pdf", p1, dpi = 300, units = "cm", limitsize = F, scale = 2,
          width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
   
   p2 <- ggplot(peaks_ann_extra, aes(Monoisotopic.Mass, Rel.Abundance_highest)) +
     geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), linewidth = 1, lineend = "butt") +
     geom_label_repel(aes(label = mass_filt2), size = 1.3, force = 5,
-                     direction = "y", nudge_y = .1,
+                     direction = "y", nudge_y = .1, na.rm=T,
                      force_pull = 0, # do not pull toward data points
                      min.segment.length = 0, segment.color = "red", 
                      segment.linetype = 2, segment.size = 0.3) +
     geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
-                     direction = "y", nudge_y = .1,
+                     direction = "y", nudge_y = .1, na.rm=T,
                      force_pull = 0, # do not pull toward data points
                      min.segment.length = 0, segment.color = "red", 
                      segment.linetype = 2, segment.size = 0.3) +
     coord_cartesian(clip = "off") + 
     # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
     facet_grid(Sample~., scales = "free") +
-    xlim(500, 6500) + #??? restrict window???
+    # ylim(0, max(peaks_ann_extra$Rel.Abundance_highest[!is.na(peaks_ann_extra$Glycoform)])) + #??? not working with faceted plots, cut out labels
+    xlim(as.numeric(gsub(":.*", "", conf_file$mass_range)),
+         as.numeric(gsub(".*:", "", conf_file$mass_range))) +
     labs(y = "Intensity (realtive to highest peak)") +
     theme_minimal() + theme(text = element_text(size = 15))
-  ggsave("Peaks_annotated_all.pdf", p2, dpi = 300, 
-         width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
+  ggsave("Peaks_annotated_all.pdf", p2, dpi = 300, units = "cm", limitsize = F, scale = 2,
+         width = 20, height = 5 * length(unique(peaks_ann_extra$Sample)))
   
 }
 
