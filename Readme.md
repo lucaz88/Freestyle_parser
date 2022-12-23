@@ -2,7 +2,7 @@
 
 ## Required inputs:
 * ***raw_data***: path to a folder containing multiple Excel files (e.g. Project_01/Freestyle_outputs), or path pointing to a single Excel file (e.g. Project_01/Freestyle_outputs/Outputfile[]()@IgM_site4.xlsx). Note that the target peptide name has to be appended **unambiguously** to the filename of each Excel file (e.g. *@peptide_X.xls*)
-*  ***annotation_db***: path to a 2-columns *.csv* file containing the list of glycoform names and related glycan masses. Note that the first row in the file contain the column names. For the glycoform names, use '_' instead of spaces, and '@' to separate name types, e.g. "H5N2@Man5"
+* ***annotation_db***: path to a 2-columns *.csv* file containing the list of glycoform names and related glycan masses. Note that the first row in the file contain the column names. For the glycoform names, use '_' instead of spaces, and '@' to separate name types, e.g. "H5N2@Man5"
 
     File example:
 
@@ -12,11 +12,11 @@
        H2N2X@MUX_,862.3067
        H3N2@MM_,892.3172
 
-*  ***config_file***: path to a 2-columns *.csv* file containing:
-    *1st row - 'tolerance_value' followed by the value (in ppm) setting the stringency of peaks' annotation
-    *2nd row - 'overlap_label_range' followed by the value (in Dalton) defining a range within which only the highest intensity peak will be labbeled in the plot
-    *3nd row - 'mass_range' followed by the values' range (in Dalton:Dalton) of min and max Monoisotopic mass that will be plotted. Use NA to allows for automatic selection of the value/s (e.g. 750:NA)
-    **n* rows containing names of any analyzed peptides followed by their masses (in Dalton)
+* ***config_file***: path to a 2-columns *.csv* file containing:
+    * 1st row - 'tolerance_value' followed by the value (in ppm) setting the stringency of peaks' annotation
+    * 2nd row - 'overlap_label_range' followed by the value (in Dalton) defining a range within which only the highest intensity peak will be labbeled in the plot
+    * 3nd row - 'mass_range' followed by the values' range (in Dalton:Dalton) of min and max Monoisotopic mass that will be plotted. Use NA to allows for automatic selection of the value/s (e.g. 750:NA)
+    * *n*rows containing names of any analyzed peptides followed by their masses (in Dalton)
     
     File example:
     
