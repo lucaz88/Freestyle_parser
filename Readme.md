@@ -1,4 +1,4 @@
-# R function to parse Freestyle Excel outputs
+# Parse Freestyle Excel outputs
 
 ## Required inputs:
 * ***raw_data***: path to a folder containing multiple Excel files (e.g. Project_01/Freestyle_outputs), or path pointing to a single Excel file (e.g. Project_01/Freestyle_outputs/Outputfile[]()@IgM_site4.xlsx). Note that the target peptide name has to be appended **unambiguously** to the filename of each Excel file (e.g. *@peptide_X.xls*)
@@ -73,4 +73,4 @@ open a terminal and type:
     cd /home/user/tools/Freestyle_parser
     Rscript Freestyle_parser_v0.3.R -r toy_data -a annotation_db.csv -c config_file.csv
 
-**To run you own sample simply `cd` into the project folder with your data and provide the related values the strings for `-r`, `-a` and/or `-c` arguments.**
+**To run you own sample simply `cd` into the project folder with your data and provide the related values for `-r`, `-a` and/or `-c` arguments.**
