@@ -1,6 +1,8 @@
 tolerance_value,5
 overlap_label_range,50
 mass_range,NA:3500
+modification_name,NA
+modification_mass,NA
 IgG,1189.512
 IgM_site1,1284.618
 IgM_site4,1216.559

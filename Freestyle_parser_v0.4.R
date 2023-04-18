@@ -2,13 +2,16 @@
 
 
 
-# #___ dummy data for testing
+# # #___ dummy data for testing
 # setwd("/media/lucaz/DATA/Seafile/Laboratorio/myscripts/GitHub/Freestyle_parser")
-# raw_data <- "toy_data"
+# # raw_data <- "toy_data"
 # # raw_data <- "toy_data/Output software @IgG.xlsx"
+# raw_data <- "toy_adducts"
 # annotation_db <- "annotation_db.csv"
-# config_file <- "config_file.csv"
-# #___ for testing
+# # config_file <- "config_file.csv"
+# config_file <- "config_file_adducts.csv"
+# out_dir <- "res_adducts"
+# # #___ for testing
 
 
 
@@ -21,12 +24,14 @@ invisible(lapply(required_libs, library, character.only = TRUE))
 
 #! parse command line argument - python style
 option_list <- list(
-  make_option(c("-r", "--raw_data"), type="character", default=NULL, 
+  make_option(c("-r", "--raw_data"), type="character", default=NULL,
               help="path to a folder containing multiple Excel files or to a single Excel file", metavar="character"),
+  make_option(c("-c", "--config_file"), type="character", default=NULL, 
+              help="path to a 2-columns *.csv* file containing tolerance_value, overlap_label_range, and any analyzed peptide name with related mass", metavar="character"),
   make_option(c("-a", "--annotation_db"), type="character", default=NULL, 
               help="path to a 2-columns *.csv* file containing the list of glycoform names and related glycan masses", metavar="character"),
-  make_option(c("-c", "--config_file"), type="character", default=NULL, 
-              help="path to a 2-columns *.csv* file containing tolerance_value, overlap_label_range, and any analyzed peptide name with related mass", metavar="character")
+  make_option(c("-o", "--out_dir"), type="character", default=NULL,
+              help="path to a folder for the output files", metavar="character")
 )
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
@@ -34,7 +39,11 @@ opt <- parse_args(opt_parser)
 
 
 #! parsing function
-Freestyle_parser <- function(raw_data, annotation_db, config_file) {
+Freestyle_parser <- function(raw_data, config_file, annotation_db, out_dir) {
+  
+  dir.create(out_dir, recursive = T, showWarnings = F)
+  
+  
   
   ##! read-in raw data
   if (file_test("-d", raw_data)) {
@@ -78,13 +87,13 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
       
     } else {
       stop(cat("The value provided for 'raw_data' (", raw_data,
-               ") doesn't point to a valid directory nor input file"))
+               ") doesn't point to a valid directory nor input file\n\n\n"))
       
     }
     
   } else {
     stop(cat("The value provided for 'raw_data' (", raw_data,
-             ") doesn't point to a valid directory nor input file"))
+             ") doesn't point to a valid directory nor input file\n\n\n"))
     
   }
   
@@ -92,22 +101,35 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
   
   ##! read-in config file
   conf_file <- read.csv(config_file, h=F, row.names = 1) %>% 
-    t() %>% as.data.frame() %>% mutate_if(!grepl(":", .), as.numeric)
+    t() %>% as.data.frame()
   
   if (colnames(conf_file)[1] != "tolerance_value") {
-    stop("Config file is missing the parameter 'tolerance_value'. Add a row like:\n\n",
-    "tolerance_value,5\n\n\n")
+    stop("Config file is missing the parameter 'tolerance_value'. Add a row such as:\n\n",
+         "tolerance_value,5\n\n\n")
   }
   
   if (colnames(conf_file)[2] != "overlap_label_range") {
-    stop("Config file is missing the parameter 'overlap_label_range'. Add a row like:\n\n",
+    stop("Config file is missing the parameter 'overlap_label_range'. Add a row such as:\n\n",
          "overlap_label_range,50\n\n\n")
   }
-
+  
   if (colnames(conf_file)[3] != "mass_range") {
-    stop("Config file is missing the parameter 'mass_range'. Add a row like:\n\n",
+    stop("Config file is missing the parameter 'mass_range'. Add a row such as:\n\n",
          "mass_range,1000:NA\n\n\n")
   }
+  
+  if (colnames(conf_file)[4] != "modification_name") {
+    stop("Config file is missing the parameter 'modification_name'. Add a row such as:\n\n",
+         "modification_name,NH4_adduct\n\n\n")
+  }
+  
+  if (colnames(conf_file)[5] != "modification_mass") {
+    stop("Config file is missing the parameter 'modification_mass'. Add a row such as:\n\n",
+         "modification_mass,18.03382\n\n\n")
+  }
+  
+  conf_file <- conf_file %>% 
+    mutate_at(vars(-c("mass_range", "modification_name")), as.numeric)
   
   missing_peptide <- unique(raw_table$Target.Peptide[!raw_table$Target.Peptide %in% names(conf_file)])
   if (length(missing_peptide) > 0) {
@@ -172,33 +194,100 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
         
       } else { i_ann }
       
-    }) %>%
+    })
+  
+  
+  
+  ##! annotate adducts
+  if (!is.na(conf_file$modification_name)) {
+    cat("\n\nAdduct annotation requested.", 
+        "\nNB: it is possible to check for one type of adduct (occurring once) at the time.\n",
+        "Repeat the analysis editing the config file to check for different adducts.\n\n")
+    
+    ###! create adducts table
+    ann_db <- ann_db %>%
+      mutate(Adduct = paste0(Glycoform, "_", conf_file$modification_name),
+             Adduct_Mass = Glycan_Mass + conf_file$modification_mass)
+    
+    ###! run annotation
+    peaks_ann <- peaks_ann %>%
+      rowwise() %>% mutate(Adduct = {
+        ###! look if peak's mass matches the mass of the target peptide + a glycan
+        i_adduct = ann_db$Adduct[target_pept_mass + ann_db$Adduct_Mass >= Monoisotopic.Mass - measurement_tolerance &
+                                   target_pept_mass + ann_db$Adduct_Mass <= Monoisotopic.Mass + measurement_tolerance]
+        
+        if (identical(i_adduct, character(0))) { NA ###! peaks that are not adducts
+        } else { i_adduct }
+        
+      }) %>%
+      group_by(Sample) %>% 
+      rowwise() %>% mutate(same_peak = {
+        i_peak = as.character(gsub(paste0("_", conf_file$modification_name), "",
+                                   na.omit(c(Glycoform, Adduct))))
+        if (length(i_peak) > 0) { i_peak } else { NA }
+      })
+    
+  }
+  
+  
+  
+  ##! calculate peak abundance
+  peaks_ann <- peaks_ann %>%
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>% 
-    mutate(Rel.Abundance_ann = if_else(!is.na(Glycoform), Sum.Intensity/sum(Sum.Intensity[!is.na(Glycoform)])*100, NA_real_),
-           Rel.Abundance_highest = Sum.Intensity/max(Sum.Intensity)*100
-           )
+    mutate(
+      Rel.Abundance_ann = if_else(!is.na(Glycoform), Sum.Intensity/sum(Sum.Intensity[!is.na(Glycoform)])*100, NA_real_),
+      Rel.Abundance_highest = Sum.Intensity/max(Sum.Intensity)*100
+    ) %>% 
+    arrange(Monoisotopic.Mass, .by_group = T)
+  
+  if (!is.na(conf_file$modification_name)) {
+    peaks_ann <- peaks_ann %>% 
+      group_by(Sample) %>%
+      mutate(
+        tot_smpl_rel_abund = sum(Rel.Abundance_highest[!is.na(same_peak)])
+      ) %>%
+      group_by(Sample, same_peak) %>%
+      mutate(
+        Rel.Abundance_w.adduct = if_else(!is.na(same_peak), sum(Rel.Abundance_highest)/tot_smpl_rel_abund*100, NA_real_),
+      ) %>% 
+      group_by(Sample) %>% arrange(Monoisotopic.Mass, .by_group = T)
+  }
+  
   
   
   ##! output tables
-  peaks_ann_all <- peaks_ann %>%
-    select(Sample, Target.Peptide, Glycoform, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity)
-  write.table(peaks_ann_all, "Peaks_annotated_all.tsv",
-              col.names = T, row.names = F, quote = F, sep = "\t")
+  if (is.na(conf_file$modification_name)) {
+    peaks_ann_all <- peaks_ann %>%
+      select(Sample, Target.Peptide, Glycoform, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity, Rel.Abundance_ann)
+    write.table(peaks_ann_all, file.path(out_dir, "Peaks_annotated_all.tsv"),
+                col.names = T, row.names = F, quote = F, sep = "\t")
+    
+    peaks_ann_clean <- peaks_ann %>%
+      filter(!is.na(Glycoform)) %>%
+      select(Sample, Target.Peptide, Glycoform, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity, Rel.Abundance_ann)
+    write.table(peaks_ann_clean, file.path(out_dir, "Peaks_annotated_clean.tsv"),
+                col.names = T, row.names = F, quote = F, sep = "\t")
+    
+  } else {
+    peaks_ann_all <- peaks_ann %>%
+      select(Sample, Target.Peptide, Glycoform, Adduct, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity, Rel.Abundance_ann, Rel.Abundance_w.adduct)
+    write.table(peaks_ann_all, file.path(out_dir, "Peaks_annotated_all.tsv"),
+                col.names = T, row.names = F, quote = F, sep = "\t")
+    
+    peaks_ann_clean <- peaks_ann %>%
+      filter(!is.na(same_peak)) %>%
+      select(Sample, Target.Peptide, Glycoform, Adduct, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity, Rel.Abundance_ann, Rel.Abundance_w.adduct)
+    write.table(peaks_ann_clean, file.path(out_dir, "Peaks_annotated_clean.tsv"),
+                col.names = T, row.names = F, quote = F, sep = "\t")
+  }
   
-  peaks_ann_clean <- peaks_ann %>%
-    filter(!is.na(Glycoform)) %>%
-    select(Sample, Target.Peptide, Glycoform, Monoisotopic.Mass, Number.of.Charge.States, RT.Range, Sum.Intensity, Rel.Abundance_ann)
-  write.table(peaks_ann_clean, "Peaks_annotated_clean.tsv",
-              col.names = T, row.names = F, quote = F, sep = "\t")
   
   
-  
-  ##! plot from clean table
+  ##! find peak clusters - consider only annotated peaks!
   min_mass_diff <- conf_file$overlap_label_range
   z <- 1
   peaks_ann_extra <- peaks_ann %>%
-    ##! find peak clusters - consider only annotated peaks!
     filter(!is.na(Glycoform)) %>%
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>%
@@ -246,29 +335,25 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
                                   drop_label != F, F, T),
            mass_filt2 = ifelse(drop_label2 == T, NA, round(Monoisotopic.Mass, 3)))
   
-  p1 <- peaks_ann_extra %>% filter(!is.na(Glycoform)) %>%
-    ggplot(aes(Monoisotopic.Mass, Rel.Abundance_highest)) +
-    geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), linewidth = 1, lineend = "butt") +
-    geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
-                     direction = "y", nudge_y = .1, na.rm=T,
-                     force_pull = 0, # do not pull toward data points
-                     min.segment.length = 0, segment.color = "red", 
-                     segment.linetype = 2, segment.size = 0.3) +
-    coord_cartesian(clip = "off") + 
-    # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
-    facet_grid(Sample~., scales = "free") +
-    labs(y = "Intensity (realtive to highest peak)") +
-    theme_minimal() + theme(text = element_text(size = 15))
-  ggsave("Peaks_annotated_clean.pdf", p1, dpi = 300, units = "cm", limitsize = F, scale = 2,
-         width = 16, height = 3 * length(unique(peaks_ann_extra$Sample)))
   
-  p2 <- ggplot(peaks_ann_extra, aes(Monoisotopic.Mass, Rel.Abundance_highest)) +
-    geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), linewidth = 1, lineend = "butt") +
-    geom_label_repel(aes(label = mass_filt2), size = 1.3, force = 5,
-                     direction = "y", nudge_y = .1, na.rm=T,
-                     force_pull = 0, # do not pull toward data points
-                     min.segment.length = 0, segment.color = "red", 
-                     segment.linetype = 2, segment.size = 0.3) +
+  
+  ##! plot from full table
+  if (is.na(conf_file$modification_name)) {
+    p1 <- ggplot(peaks_ann_extra, aes(Monoisotopic.Mass, Rel.Abundance_highest)) + 
+      geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), 
+                   linewidth = 1, lineend = "butt")
+  } else {
+    p1 <- ggplot(peaks_ann_extra, aes(Monoisotopic.Mass, Rel.Abundance_highest)) + 
+      geom_segment(aes(xend = Monoisotopic.Mass, yend = 0, color = !is.na(Adduct)), 
+                   linewidth = 1, lineend = "butt") +
+      scale_color_manual(values = c("black", "orange")) +
+      labs(color = "Adduct")
+  }
+  p1 <- p1 + geom_label_repel(aes(label = mass_filt2), size = 1.3, force = 5,
+                              direction = "y", nudge_y = .1, na.rm=T,
+                              force_pull = 0, # do not pull toward data points
+                              min.segment.length = 0, segment.color = "red", 
+                              segment.linetype = 2, segment.size = 0.3) +
     geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
                      direction = "y", nudge_y = .1, na.rm=T,
                      force_pull = 0, # do not pull toward data points
@@ -276,14 +361,43 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
                      segment.linetype = 2, segment.size = 0.3) +
     coord_cartesian(clip = "off") + 
     # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
-    facet_grid(Sample~., scales = "free") +
+    facet_wrap(~Sample, ncol = 1, scales = "free") +
     # ylim(0, max(peaks_ann_extra$Rel.Abundance_highest[!is.na(peaks_ann_extra$Glycoform)])) + #??? not working with faceted plots, cut out labels
     xlim(as.numeric(gsub(":.*", "", conf_file$mass_range)),
          as.numeric(gsub(".*:", "", conf_file$mass_range))) +
     labs(y = "Intensity (realtive to highest peak)") +
-    theme_minimal() + theme(text = element_text(size = 15))
-  ggsave("Peaks_annotated_all.pdf", p2, dpi = 300, units = "cm", limitsize = F, scale = 2,
-         width = 20, height = 5 * length(unique(peaks_ann_extra$Sample)))
+    theme_minimal() + theme(text = element_text(size = 15), legend.position = "top")
+  ggsave(file.path(out_dir, "Peaks_annotated_all.pdf"), p1, dpi = 300, units = "cm", limitsize = F, scale = 2,
+         width = 20, height = 5.5 * length(unique(peaks_ann_extra$Sample)) + .5)
+  
+  
+  
+  ##! plot from clean table
+  if (is.na(conf_file$modification_name)) {
+    p2 <- peaks_ann_extra %>% filter(!is.na(Glycoform)) %>%
+      ggplot(aes(Monoisotopic.Mass, Rel.Abundance_highest)) + 
+      geom_segment(aes(xend = Monoisotopic.Mass, yend = 0), 
+                   linewidth = 1, lineend = "butt")
+  } else {
+    p2 <- peaks_ann_extra %>% filter(!is.na(same_peak)) %>%
+      ggplot(aes(Monoisotopic.Mass, Rel.Abundance_highest)) + 
+      geom_segment(aes(xend = Monoisotopic.Mass, yend = 0, color = !is.na(Adduct)), 
+                   linewidth = 1, lineend = "butt") +
+      scale_color_manual(values = c("black", "orange")) +
+      labs(color = "Adduct")
+  }
+  p2 <- p2 + geom_label_repel(aes(label = label_filt_wmass), size = 2.3, force = 5,
+                              direction = "y", nudge_y = .1, na.rm=T,
+                              force_pull = 0, # do not pull toward data points
+                              min.segment.length = 0, segment.color = "red", 
+                              segment.linetype = 2, segment.size = 0.3) +
+    coord_cartesian(clip = "off") +
+    # scale_y_continuous(expand = expansion(mult = c(0, 1))) +
+    facet_wrap(~Sample, ncol = 1, scales = "free") +
+    labs(y = "Intensity (realtive to highest peak)") +
+    theme_minimal() + theme(text = element_text(size = 15), legend.position = "top")
+  ggsave(file.path(out_dir, "Peaks_annotated_clean.pdf"), p2, dpi = 300, units = "cm", limitsize = F, scale = 2,
+         width = 16, height = 3.5 * length(unique(peaks_ann_extra$Sample)) + .5)
   
 }
 
@@ -291,5 +405,6 @@ Freestyle_parser <- function(raw_data, annotation_db, config_file) {
 
 #! execute
 Freestyle_parser(raw_data = opt$raw_data, 
+                 config_file = opt$config_file,
                  annotation_db = opt$annotation_db, 
-                 config_file = opt$config_file)
+                 out_dir = opt$out_dir)

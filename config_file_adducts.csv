@@ -1,0 +1,10 @@
+tolerance_value,5
+overlap_label_range,50
+mass_range,1500:4500
+modification_name,Formyl
+modification_mass,27.994915
+IgG,1189.512
+IgM_site1,1284.618
+IgM_site4,1216.559
+Aflibercept_site1,1172.6885
+IgGFc,1189.512

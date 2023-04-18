@@ -1,9 +1,4 @@
+_misc/*
 _old/*
-project_ideas.odt
 .Rhistory
-Peaks_annotated_*
-test_result_*
-Readme.html
-annotation_db_formyl.csv
-building_blocks.tsv
-config_file_long.csv
+res_*
