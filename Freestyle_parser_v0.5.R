@@ -2,7 +2,7 @@
 
 
 
-# # #___ dummy data for testing
+# #___ dummy data for testing
 # setwd("/media/lucaz/DATA/Seafile/Laboratorio/myscripts/GitHub/Freestyle_parser")
 # # raw_data <- "toy_data"
 # # raw_data <- "toy_data/Output software @IgG.xlsx"
@@ -11,7 +11,7 @@
 # # config_file <- "config_file.csv"
 # config_file <- "config_file_adducts.csv"
 # out_dir <- "res_adducts"
-# # #___ for testing
+# #___ for testing
 
 
 
@@ -286,50 +286,34 @@ Freestyle_parser <- function(raw_data, config_file, annotation_db, out_dir) {
   
   ##! find peak clusters - consider only annotated peaks!
   min_mass_diff <- conf_file$overlap_label_range
-  z <- 1
   peaks_ann_extra <- peaks_ann %>%
     filter(!is.na(Glycoform)) %>%
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>%
-    mutate(too_close_sx = if_else(abs(Monoisotopic.Mass - lag(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
-           too_close_dx = if_else(abs(Monoisotopic.Mass - lead(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
-    ) %>%
-    rowwise() %>% mutate(
-      dummy_cluster = {
-        if ((too_close_sx == F & too_close_dx == T) | 
-            all(too_close_sx, too_close_dx)) {
-          z
-        } else {
-          z <- z + 1
-          z-1
-        } 
-      }) %>% 
+    mutate(too_close_sx = if_else(c(min_mass_diff, diff(Monoisotopic.Mass)) < min_mass_diff, T, F),
+           # too_close_dx = if_else(abs(Monoisotopic.Mass - lead(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
+           dummy_cluster = if_else(!too_close_sx, 1, 0),
+           dummy_cluster = cumsum(dummy_cluster)
+           )%>% 
     group_by(Sample, dummy_cluster) %>% 
     mutate(drop_label = ifelse(Sum.Intensity == max(Sum.Intensity), F, T),
            label_filt = ifelse(drop_label == T, NA, Glycoform),
            mass_filt = ifelse(drop_label == T, NA, round(Monoisotopic.Mass, 3)),
-           label_filt_wmass = ifelse(drop_label == T, NA, paste0(label_filt, "\n", sprintf("%0.3f", mass_filt)))) %>%
+           label_filt_wmass = ifelse(drop_label == T, NA, paste0(label_filt, "\n", sprintf("%0.3f", mass_filt)))
+           ) %>%
     ungroup() %>%
-    select(-c(too_close_sx, too_close_dx, dummy_cluster)) %>%
+    select(-c(too_close_sx, dummy_cluster)) %>%
     ###! merge back with full table
     left_join(peaks_ann, .) %>%
     replace_na(list(drop_label = T)) %>%
     ###! find peak clusters - any peaks!
     group_by(Sample) %>% 
     arrange(Monoisotopic.Mass, .by_group = T) %>%
-    mutate(too_close_sx2 = if_else(abs(Monoisotopic.Mass - lag(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
-           too_close_dx2 = if_else(abs(Monoisotopic.Mass - lead(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
+    mutate(too_close_sx2 = if_else(c(min_mass_diff, diff(Monoisotopic.Mass)) < min_mass_diff, T, F),
+           # too_close_dx2 = if_else(abs(Monoisotopic.Mass - lead(Monoisotopic.Mass, default = 0)) <= min_mass_diff, T, F),
+           dummy_cluster2 = if_else(!too_close_sx2, 1, 0),
+           dummy_cluster2 = cumsum(dummy_cluster2)
     ) %>%
-    rowwise() %>% mutate(
-      dummy_cluster2 = {
-        if ((too_close_sx2 == F & too_close_dx2 == T) | 
-            all(too_close_sx2, too_close_dx2)) {
-          z
-        } else {
-          z <- z + 1
-          z-1
-        } 
-      }) %>% 
     group_by(Sample, dummy_cluster2) %>% 
     mutate(drop_label2 = ifelse(Sum.Intensity == max(Sum.Intensity) &
                                   drop_label != F, F, T),
