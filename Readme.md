@@ -73,18 +73,18 @@ For **Windows** system:
 * Type in "Command Prompt"
 * Left click on Command Prompt
 * Move into the repository folder `cd C:\Users\Luca\Tools\Freestyle_parser-main` in which toy files are provided to test the tool
-* Type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Freestyle_parser_v0.4.R -r toy_data -a annotation_db.csv -c config_file.csv -o res_toy`
+* Type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Freestyle_parser.R -r toy_data -a annotation_db.csv -c config_file.csv -o res_toy`
 
-* To test the adducts option type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Rscript Freestyle_parser_v0.4.R -r toy_adducts -a annotation_db.csv -c config_file_adducts.csv -o res_adducts`
+* To test the adducts option type `"C:\Program Files\R\R-4.2.2\bin\Rscript.exe" Rscript Freestyle_parser.R -r toy_adducts -a annotation_db.csv -c config_file_adducts.csv -o res_adducts`
 
 For **Linux** system:
 
 open a terminal and type:
 
     cd /home/user/tools/Freestyle_parser
-    Rscript Freestyle_parser_v0.4.R -r toy_data -a annotation_db.csv -c config_file.csv -o res_toy
+    Rscript Freestyle_parser.R -r toy_data -a annotation_db.csv -c config_file.csv -o res_toy
     
     # To test the adducts option:
-    Rscript Freestyle_parser_v0.4.R -r toy_adducts -a annotation_db.csv -c config_file_adducts.csv -o res_adducts
+    Rscript Freestyle_parser.R -r toy_adducts -a annotation_db.csv -c config_file_adducts.csv -o res_adducts
 
-**To run you own sample simply edit the paths of the arguments `-r`, `-a`, `-c` and `-o` so that they point to the relevant folder/files. Otherwise, `cd` into your project folders, containing the needed files, and add the full path to the script file in the command (e.g. `Rscript /home/user/tools/Freestyle_parser/Freestyle_parser_v0.4.R -r ...`).**
+**To run you own sample simply edit the paths of the arguments `-r`, `-a`, `-c` and `-o` so that they point to the relevant folder/files. Otherwise, `cd` into your project folders, containing the needed files, and add the full path to the script file in the command (e.g. `Rscript /home/user/tools/Freestyle_parser/Freestyle_parser.R -r ...`).**
